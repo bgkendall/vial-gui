@@ -64,7 +64,7 @@
             ]
         },
         {
-            "name": "Mouse keys",
+            "name": "Mouse Keys",
             "fields": [
                 { "type": "integer", "title": "Delay between pressing a movement key and cursor movement", "qsid": 9, "min": 0, "max": 10000, "width": 2 },
                 { "type": "integer", "title": "Time between cursor movements in milliseconds", "qsid": 10, "min": 0, "max": 10000, "width": 2 },

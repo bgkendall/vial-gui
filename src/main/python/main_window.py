@@ -77,8 +77,8 @@ class MainWindow(QMainWindow):
 
         self.editors = [(self.keymap_editor, "Keymap"), (self.layout_editor, "Layout"), (self.macro_recorder, "Macros"),
                         (self.rgb_configurator, "Lighting"), (self.tap_dance, "Tap Dance"), (self.combos, "Combos"),
-                        (self.key_override, "Key Overrides"), (self.qmk_settings, "QMK Settings"),
-                        (self.matrix_tester, "Matrix tester"), (self.firmware_flasher, "Firmware updater")]
+                        (self.key_override, "Key Overrides"), (self.qmk_settings, "Keyboard Settings"),
+                        (self.matrix_tester, "Matrix Tester"), (self.firmware_flasher, "Firmware Updater")]
 
         Unlocker.global_layout_editor = self.layout_editor
         Unlocker.global_main_window = self
@@ -139,21 +139,21 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(100, vialglue.notify_ready)
 
     def init_menu(self):
-        layout_load_act = QAction(tr("MenuFile", "Load saved layout..."), self)
+        layout_load_act = QAction(tr("MenuFile", "Load Saved Layout..."), self)
         layout_load_act.setShortcut("Ctrl+O")
         layout_load_act.triggered.connect(self.on_layout_load)
 
-        layout_save_act = QAction(tr("MenuFile", "Save current layout..."), self)
+        layout_save_act = QAction(tr("MenuFile", "Save Current Layout..."), self)
         layout_save_act.setShortcut("Ctrl+S")
         layout_save_act.triggered.connect(self.on_layout_save)
 
         sideload_json_act = QAction(tr("MenuFile", "Sideload VIA JSON..."), self)
         sideload_json_act.triggered.connect(self.on_sideload_json)
 
-        download_via_stack_act = QAction(tr("MenuFile", "Download VIA definitions"), self)
+        download_via_stack_act = QAction(tr("MenuFile", "Download VIA Definitions"), self)
         download_via_stack_act.triggered.connect(self.load_via_stack_json)
 
-        load_dummy_act = QAction(tr("MenuFile", "Load dummy JSON..."), self)
+        load_dummy_act = QAction(tr("MenuFile", "Load Dummy JSON..."), self)
         load_dummy_act.triggered.connect(self.on_load_dummy)
 
         exit_act = QAction(tr("MenuFile", "Exit"), self)
@@ -179,11 +179,11 @@ class MainWindow(QMainWindow):
         keyboard_lock_act.setShortcut("Ctrl+L")
         keyboard_lock_act.triggered.connect(self.lock_keyboard)
 
-        keyboard_reset_act = QAction(tr("MenuSecurity", "Reboot to bootloader"), self)
+        keyboard_reset_act = QAction(tr("MenuSecurity", "Reboot to Bootloader"), self)
         keyboard_reset_act.setShortcut("Ctrl+B")
         keyboard_reset_act.triggered.connect(self.reboot_to_bootloader)
 
-        keyboard_layout_menu = self.menuBar().addMenu(tr("Menu", "Keyboard layout"))
+        keyboard_layout_menu = self.menuBar().addMenu(tr("Menu", "Language"))
         keymap_group = QActionGroup(self)
         selected_keymap = self.settings.value("keymap")
         for idx, keymap in enumerate(KEYMAPS):
