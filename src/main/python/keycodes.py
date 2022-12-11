@@ -316,11 +316,13 @@ def LT(layer):
     return QK_LAYER_TAP | (((layer) & 0xF) << 8)
 
 
-RESET_KEYCODE = 0x5C00
+RESET_KEYCODE    = 0x5C00
 
 
 KEYCODES_BOOT = [
-    K(RESET_KEYCODE, "RESET", "Reset", "Reboot to bootloader")
+    K(RESET_KEYCODE, "QK_BOOTLOADER", "Reset", "Reboot to bootloader"),
+    K(0x5DA7, "QK_REBOOT", "Restart", "Restart keyboard"),
+    K(0x5DA6, "QK_MAKE", "Make", "Send keyboard firmware compilation command")
 ]
 
 KEYCODES_MODIFIERS = [
