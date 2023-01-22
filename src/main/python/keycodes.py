@@ -296,7 +296,7 @@ MOD_RALT = 0x14
 MOD_RGUI = 0x18
 
 MOD_HYPR = 0xF
-MOD_MEH = 0x7
+MOD_MEH  = 0x7
 
 QK_LCTL = 0x0100
 QK_LSFT = 0x0200
@@ -764,6 +764,7 @@ KEYCODES_MIDI_ADVANCED = [
     K(0x5CBA, "MI_BENDU", "ᴹᴵᴰᴵ\nBendᵁᴾ", "Midi bend pitch up"),
 ]
 
+KEYCODES_EXTRA_MODIFIERS = []
 KEYCODES_HIDDEN = []
 for x in range(256):
     from any_keycode import QK_TAP_DANCE
@@ -781,8 +782,9 @@ def recreate_keycodes():
 
     KEYCODES.clear()
     KEYCODES.extend(KEYCODES_SPECIAL + KEYCODES_BASIC + KEYCODES_SHIFTED + KEYCODES_ISO + KEYCODES_LAYERS +
-                    KEYCODES_BOOT + KEYCODES_MODIFIERS + KEYCODES_QUANTUM + KEYCODES_BACKLIGHT + KEYCODES_MEDIA +
-                    KEYCODES_TAP_DANCE + KEYCODES_MACRO + KEYCODES_USER + KEYCODES_HIDDEN + KEYCODES_MIDI)
+                    KEYCODES_BOOT + KEYCODES_MODIFIERS + KEYCODES_EXTRA_MODIFIERS + KEYCODES_QUANTUM +
+                    KEYCODES_BACKLIGHT + KEYCODES_MEDIA + KEYCODES_TAP_DANCE + KEYCODES_MACRO + KEYCODES_USER +
+                    KEYCODES_HIDDEN + KEYCODES_MIDI)
     KEYCODES_MAP.clear()
     for keycode in KEYCODES:
         KEYCODES_MAP[keycode.code] = keycode
@@ -822,6 +824,111 @@ def create_midi_keycodes(midiSettingLevel):
 
     if midiSettingLevel == "advanced":
         KEYCODES_MIDI.extend(KEYCODES_MIDI_ADVANCED)
+
+
+def create_extra_modifier_keycodes():
+
+    defined_modifiers = set()
+
+    for k in KEYCODES_MODIFIERS:
+        defined_modifiers.add(k.code)
+
+    # Add any as yet undefined modifier combinations as hidden, but recognised keycodes
+
+    KEYCODES_EXTRA_MODIFIERS.clear()
+
+    mods = [ MOD_LCTL, MOD_LSFT, MOD_LALT, MOD_LGUI, 0 ]
+
+    for side in [ (0, "Left"), (1, "Right") ]:
+        for mod1 in mods:
+            for mod2 in mods:
+                for mod3 in mods:
+                    for mod4 in mods:
+
+                        if not (mod1 == 0 and mod2 == 0 and mod3 == 0 and mod4 == 0):
+
+                            lr = side[1][0]
+
+                            # Add simple mods + key if needed
+                            #
+                            mod_code = ((mod1 | mod2 | mod3 | mod4) << 8) | (side[0] << 12)
+                            if mod_code not in defined_modifiers:
+                                qmk_code = (lr + "CTL(" if mod_code & QK_LCTL else "") + \
+                                            (lr + "SFT(" if mod_code & QK_LSFT else "") + \
+                                             (lr + "ALT(" if mod_code & QK_LALT else "") + \
+                                              (lr + "GUI(" if mod_code & QK_LGUI else "") + \
+                                               "kc" + \
+                                              (")" if mod_code & QK_LGUI else "") + \
+                                             (")" if mod_code & QK_LALT else "") + \
+                                            (")" if mod_code & QK_LSFT else "") + \
+                                           (")" if mod_code & QK_LCTL else "")
+                                label = lr + \
+                                        ("C" if mod_code & QK_LCTL else "") + \
+                                        ("S" if mod_code & QK_LSFT else "") + \
+                                        ("A" if mod_code & QK_LALT else "") + \
+                                        ("G" if mod_code & QK_LGUI else "") + \
+                                        "\n(kc)"
+                                tooltip = (lr + "CTL + " if mod_code & QK_LCTL else "") + \
+                                          (lr + "SFT + " if mod_code & QK_LSFT else "") + \
+                                          (lr + "ALT + " if mod_code & QK_LALT else "") + \
+                                          (lr + "GUI + " if mod_code & QK_LGUI else "") + \
+                                          "kc"
+                                print("Adding keycode: " + "0x{:04X}".format(mod_code) + ", " + qmk_code + ", " + label.replace("\n", "//") + ', ' + tooltip)
+                                KEYCODES_EXTRA_MODIFIERS.append(
+                                    Keycode(mod_code, qmk_code, label, tooltip, masked=True))
+                                defined_modifiers.add(mod_code)
+
+                            # Add mod-tap if needed
+                            #
+                            mod_tap_code = MT(mod1 | mod2 | mod3 | mod4) | (side[0] << 12)
+                            if mod_tap_code not in defined_modifiers:
+                                qmk_code = "MT(" + \
+                                           (("MOD_" + lr + "CTL|" if mod_tap_code & QK_LCTL else "") +
+                                            ("MOD_" + lr + "SFT|" if mod_tap_code & QK_LSFT else "") +
+                                            ("MOD_" + lr + "ALT|" if mod_tap_code & QK_LALT else "") +
+                                            ("MOD_" + lr + "GUI|" if mod_tap_code & QK_LGUI else "")).rstrip("|") + \
+                                            ", (kc))"
+                                label = lr + \
+                                        ("C" if mod_tap_code & QK_LCTL else "") + \
+                                        ("S" if mod_tap_code & QK_LSFT else "") + \
+                                        ("A" if mod_tap_code & QK_LALT else "") + \
+                                        ("G" if mod_tap_code & QK_LGUI else "") + \
+                                        "_T\n(kc)"
+                                tooltip = ((lr + "CTL + " if mod_tap_code & QK_LCTL else "") +
+                                           (lr + "SFT + " if mod_tap_code & QK_LSFT else "") +
+                                           (lr + "ALT + " if mod_tap_code & QK_LALT else "") +
+                                           (lr + "GUI + " if mod_tap_code & QK_LGUI else "")).rstrip("+ ") + \
+                                           " when held, kc when tapped"
+                                print("Adding keycode: " + "0x{:04X}".format(mod_tap_code) + ", " + qmk_code + ", " + label.replace("\n", "//") + ', ' + tooltip)
+                                KEYCODES_EXTRA_MODIFIERS.append(
+                                    Keycode(mod_tap_code, qmk_code, label, tooltip, masked=True))
+                                defined_modifiers.add(mod_tap_code)
+
+                            # Add one-shot modifier if needed
+                            #
+                            osm_code = QK_ONE_SHOT_MOD | mod1 | mod2 | mod3 | mod4 | (side[0] << 4)
+                            if osm_code not in defined_modifiers:
+                                qmk_code = "OSM(" + \
+                                           (("MOD_" + lr + "CTL|" if osm_code & MOD_LCTL else "") +
+                                            ("MOD_" + lr + "SFT|" if osm_code & MOD_LSFT else "") +
+                                            ("MOD_" + lr + "ALT|" if osm_code & MOD_LALT else "") +
+                                            ("MOD_" + lr + "GUI|" if osm_code & MOD_LGUI else "")).rstrip("|") + \
+                                            ")"
+                                label = "OSM\n" + lr + \
+                                        ("C" if osm_code & MOD_LCTL else "") + \
+                                        ("S" if osm_code & MOD_LSFT else "") + \
+                                        ("A" if osm_code & MOD_LALT else "") + \
+                                        ("G" if osm_code & MOD_LGUI else "")
+                                tooltip = "Enable " + side[1] + " " + \
+                                          (("Control + " if osm_code & MOD_LCTL else "") +
+                                           ("Shift + "   if osm_code & MOD_LSFT else "") +
+                                           ("Alt + "     if osm_code & MOD_LALT else "") +
+                                           ("GUI + "     if osm_code & MOD_LGUI else "")).rstrip("+ ") + \
+                                           " for one keypress"
+                                print("Adding keycode: " + "0x{:04X}".format(osm_code) + ", " + qmk_code + ", " + label.replace("\n", "//") + ', ' + tooltip)
+                                KEYCODES_EXTRA_MODIFIERS.append(
+                                    Keycode(osm_code, qmk_code, label, tooltip))
+                                defined_modifiers.add(osm_code)
 
 
 def recreate_keyboard_keycodes(keyboard):
@@ -885,6 +992,8 @@ def recreate_keyboard_keycodes(keyboard):
         create_user_keycodes()
 
     create_midi_keycodes(keyboard.midi)
+
+    create_extra_modifier_keycodes()
 
     recreate_keycodes()
 
